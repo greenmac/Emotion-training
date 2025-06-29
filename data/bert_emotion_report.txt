@@ -1,0 +1,10 @@
+              precision    recall  f1-score   support
+
+  confidence       1.00      0.91      0.95       104
+      excite       0.97      1.00      0.99       102
+     inspire       0.98      0.98      0.98       104
+    pleasure       0.95      1.00      0.97       104
+
+    accuracy                           0.97       414
+   macro avg       0.97      0.97      0.97       414
+weighted avg       0.97      0.97      0.97       414
