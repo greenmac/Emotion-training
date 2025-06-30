@@ -4,6 +4,7 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from utils_tool import get_folder_path
+from utils_tool import get_device
 from utils_tool import timer
 import pandas as pd
 import torch
@@ -30,6 +31,9 @@ saved_model_path = f'{data_path}/emotion_model'
 
 report_path = f'{data_path}/bert_emotion_report.txt'
 
+device = get_device()
+print(f'Using device: {device}')
+
 class EmotionDataset(Dataset):
     def __init__(self, texts, labels, tokenizer):
         self.encodings = tokenizer(texts, truncation=True, padding=True, max_length=128)
@@ -46,7 +50,6 @@ class EmotionDataset(Dataset):
 @timer
 def model_train():
     model = BertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=4)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -77,7 +80,7 @@ def model_train():
 
 @timer
 def model_eval():
-    model, tokenizer, device = load_model()
+    model, tokenizer = load_model()
     test_dataset = EmotionDataset(test_texts, test_labels, tokenizer)
 
     model.eval()
@@ -92,8 +95,6 @@ def model_eval():
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(batch['labels'].cpu().numpy())
 
-    print(classification_report(all_labels, all_preds, target_names=label2id.keys()))
-
     report = classification_report(all_labels, all_preds, target_names=label2id.keys())
     print(report)
 
@@ -101,13 +102,11 @@ def model_eval():
         f.write(report)
 
 def load_model():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     tokenizer = BertTokenizer.from_pretrained(saved_model_path)
     model = BertForSequenceClassification.from_pretrained(saved_model_path)
     model.to(device)
     model.eval()
-    print(f'Model and tokenizer loaded from {saved_model_path}')
-    return model, tokenizer, device
+    return model, tokenizer
         
         
 if __name__ == '__main__':
